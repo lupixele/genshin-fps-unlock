@@ -78,16 +78,13 @@ std::vector<uint8_t*> Utils::PatternScanAll(std::span<uint8_t> bytes, const char
 	const auto maskCount = static_cast<std::size_t>(std::ceil(patternMask.size() / static_cast<float>(chunkSize)));
 	std::array<int32_t, 32> masks{}; // Supports patterns up to 512 bytes
 
-	auto chunks = patternMask | std::views::chunk(chunkSize);
-	std::size_t maskIdx = 0;
-	for (auto chunk : chunks) {
+	for (std::size_t maskIdx = 0; maskIdx < patternMask.size(); maskIdx += chunkSize) {
 		int32_t mask = 0;
-		int bit = 0;
-		for (char c : chunk) {
-			if (c == 'x') mask |= (1 << bit);
-			bit++;
+		const auto chunkLen = std::min(chunkSize, patternMask.size() - maskIdx);
+		for (std::size_t bit = 0; bit < chunkLen; bit++) {
+			if (patternMask[maskIdx + bit] == 'x') mask |= (1 << bit);
 		}
-		masks[maskIdx++] = mask;
+		masks[maskIdx / chunkSize] = mask;
 	}
 
 	__m128i patternFirst16 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(patternBytes.data()));

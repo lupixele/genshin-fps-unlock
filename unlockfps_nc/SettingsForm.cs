@@ -38,6 +38,7 @@ namespace unlockfps_nc
             CBAutoClose.DataBindings.Add("Checked", _config, "AutoClose", true, DataSourceUpdateMode.OnPropertyChanged);
             CBPowerSave.DataBindings.Add("Checked", _config, "UsePowerSave", true, DataSourceUpdateMode.OnPropertyChanged);
             CBHdr.DataBindings.Add("Checked", _config, "UseHDR", true, DataSourceUpdateMode.OnPropertyChanged);
+            CBMaxFps.DataBindings.Add("Checked", _config, "CapFpsTo120", true, DataSourceUpdateMode.OnPropertyChanged);
             ComboPriority.DataBindings.Add("SelectedIndex", _config, "Priority", true, DataSourceUpdateMode.OnPropertyChanged);
             
             // Launch Options

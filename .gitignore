@@ -365,3 +365,8 @@ FodyWeavers.xsd
 *.dll
 *.lib
 *.exp
+# build output (attached to releases instead)
+dist/
+
+# local scratch
+.freebuff/

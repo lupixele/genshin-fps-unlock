@@ -22,6 +22,10 @@ namespace unlockfps_nc.Model
         public bool UseMobileUI { get; set; }
         public bool UseHDR { get; set; }
 
+        // the game now kicks players whose target framerate goes above 120 (10310-4001),
+        // so the requested value is clamped unless this is explicitly turned off
+        public bool CapFpsTo120 { get; set; } = true;
+
         public int FPSTarget { get; set; } = 120;
         public int CustomResX { get; set; } = 1920;
         public int CustomResY { get; set; } = 1080;

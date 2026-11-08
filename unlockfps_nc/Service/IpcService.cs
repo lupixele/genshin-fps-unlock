@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO.MemoryMappedFiles;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -104,6 +105,11 @@ namespace unlockfps_nc.Service
 
         public void OnGameExit()
         {
+            if (_wndHook != IntPtr.Zero) {
+                Native.UnhookWindowsHookEx(_wndHook);
+                _wndHook = IntPtr.Zero;
+            }
+
             var ipcData = new IpcData
             {
                 Status = IpcStatus.None,
@@ -114,9 +120,13 @@ namespace unlockfps_nc.Service
 
         public void Update()
         {
+            var framerate = configService.Config.FPSTarget;
+            if (configService.Config.CapFpsTo120)
+                framerate = Math.Min(framerate, 120);
+
             var ipcData = new IpcData
             {
-                Framerate = configService.Config.FPSTarget,
+                Framerate = framerate,
                 PowerSave = configService.Config.UsePowerSave,
                 UseMobileUI = configService.Config.UseMobileUI,
             };
@@ -126,12 +136,20 @@ namespace unlockfps_nc.Service
 
         private string GetUnlockerStubPath()
         {
-            var assembly = Assembly.GetExecutingAssembly();
-            using var stream = assembly.GetManifestResourceStream("unlockfps_nc.Resources.UnlockerStub.dll");
-
             var filePath = Path.Combine(AppContext.BaseDirectory, "UnlockerStub.dll");
 
+            var assembly = Assembly.GetExecutingAssembly();
+            using var stream = assembly.GetManifestResourceStream("unlockfps_nc.Resources.UnlockerStub.dll");
+            if (stream == null)
+                return filePath;
+
             try {
+                // only extract when the file is missing or different, so the exe doesn't
+                // rewrite an unsigned dll on every launch (that pattern looks like a dropper)
+                if (File.Exists(filePath) && HasSameContent(filePath, stream))
+                    return filePath;
+
+                stream.Position = 0;
                 using var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write);
                 stream.CopyTo(fileStream);
             }
@@ -140,8 +158,29 @@ namespace unlockfps_nc.Service
             return filePath;
         }
 
+        private static bool HasSameContent(string path, Stream embedded)
+        {
+            try {
+                using var sha = SHA256.Create();
+                var embeddedHash = sha.ComputeHash(embedded);
+
+                using var fileStream = File.OpenRead(path);
+                var fileHash = sha.ComputeHash(fileStream);
+
+                return embeddedHash.AsSpan().SequenceEqual(fileHash);
+            }
+            catch (Exception) {
+                return false;
+            }
+        }
+
         public void Dispose()
         {
+            if (_wndHook != IntPtr.Zero) {
+                Native.UnhookWindowsHookEx(_wndHook);
+                _wndHook = IntPtr.Zero;
+            }
+
             _sharedMemoryAccessor?.Dispose();
             _sharedMemory?.Dispose();
             _stubModule.Dispose();

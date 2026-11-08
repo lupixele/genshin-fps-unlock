@@ -14,6 +14,7 @@ namespace
 {
 	HMODULE ModuleBase = nullptr;
 	int32_t* pFramerate = nullptr;
+	std::vector<int32_t*> FramerateTargets;
 	HWND GameWindow = nullptr;
 
 	uint8_t* HookHandle = nullptr;
@@ -28,7 +29,7 @@ namespace
 		Ready
 	};
 
-	struct __declspec(align(8)) IPCData
+	struct alignas(8) IPCData
 	{
 		IPCStatus Status;
 		int32_t Framerate;
@@ -65,6 +66,72 @@ LONG __stdcall VectoredExceptionHandler(PEXCEPTION_POINTERS ExceptionInfo)
 	return EXCEPTION_CONTINUE_SEARCH;
 }
 
+bool IsWritable(uint32_t protect)
+{
+	if (protect & PAGE_GUARD)
+		return false;
+
+	switch (protect & 0xFF)
+	{
+	case PAGE_READWRITE:
+	case PAGE_WRITECOPY:
+	case PAGE_EXECUTE_READWRITE:
+	case PAGE_EXECUTE_WRITECOPY:
+		return true;
+	default:
+		return false;
+	}
+}
+
+bool IsPlausibleFramerate(void* address, int32_t& value)
+{
+	MEMORY_BASIC_INFORMATION mbi{};
+	if (VirtualQuery(address, &mbi, sizeof(mbi)) == 0 || mbi.State != MEM_COMMIT)
+		return false;
+
+	if (!IsWritable(mbi.Protect))
+		return false;
+
+	value = *static_cast<int32_t*>(address);
+
+	// 0 is allowed: the static can still be uninitialised when the unlocker attaches,
+	// and the polling loop writes the requested value from then on
+	return value >= 0 && value <= 1000;
+}
+
+/*
+ * The game keeps the frame limit in one or more static ints and resets them to the
+ * default with a tiny managed setter, compiled to "mov dword ptr [rip+disp], imm ; ret".
+ * Scanning for those setters is version independent, unlike the old thunk walk, which
+ * required the "mov ecx, 60 ; call" target to still be a managed setter. From 7.x on
+ * that call goes straight into native code, so the old walk resolves to nothing.
+ */
+bool DiscoverFramerateTargets(std::span<uint8_t> il2cppSection)
+{
+	std::vector<uint8_t*> candidates;
+	for (const char* pattern : { "C7 05 ? ? ? ? 3C 00 00 00 C3", "C7 05 ? ? ? ? 78 00 00 00 C3" })
+	{
+		for (const auto hit : Utils::PatternScanAll(il2cppSection, pattern))
+		{
+			const auto disp = *reinterpret_cast<int32_t*>(hit + 2);
+			auto* target = hit + 10 + disp;
+			if (std::find(candidates.begin(), candidates.end(), target) == candidates.end())
+				candidates.push_back(target);
+		}
+	}
+
+	for (auto* candidate : candidates)
+	{
+		int32_t current = 0;
+		if (!IsPlausibleFramerate(candidate, current))
+			continue;
+
+		FramerateTargets.push_back(reinterpret_cast<int32_t*>(candidate));
+	}
+
+	return !FramerateTargets.empty();
+}
+
 bool SetupData()
 {
 
@@ -89,6 +156,11 @@ bool SetupData()
 		return false;
 	}
 
+	// current game builds: resolve the limit statics directly and skip the legacy walk
+	if (DiscoverFramerateTargets(il2cppSection))
+		return true;
+
+	// legacy fallback for older game builds
 	const auto patternResults = Utils::PatternScanAll(il2cppSection, "B9 3C 00 00 00 E8");
 	auto targetEntry = std::ranges::filter_view(patternResults, [](const auto& result) { 
 		const auto rip = result + 5;
@@ -321,7 +393,7 @@ bool InstallHook()
 DWORD __stdcall ThreadProc(LPVOID lpParameter)
 {
 	const auto processName = Utils::GetModulePath(nullptr);
-	if (!processName.contains(L"YuanShen.exe") && !processName.contains(L"GenshinImpact.exe"))
+	if (processName.find(L"YuanShen.exe") == std::wstring::npos && processName.find(L"GenshinImpact.exe") == std::wstring::npos)
 		return 0;
 
 	const auto processDirectory = processName.substr(0, processName.find_last_of(L'\\'));
@@ -378,7 +450,17 @@ DWORD __stdcall ThreadProc(LPVOID lpParameter)
 		}
 
 		targetFramerate = std::clamp(targetFramerate, 10, 1000);
-		*pFramerate = targetFramerate;
+
+		if (!FramerateTargets.empty())
+		{
+			for (auto* address : FramerateTargets)
+				*address = targetFramerate;
+		}
+		else if (pFramerate)
+		{
+			*pFramerate = targetFramerate;
+		}
+
 		Sleep(62);
 	}
 

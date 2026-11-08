@@ -14,6 +14,12 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
     <Configurations>Debug;Release;ReleaseMin</Configurations>
+    <Version>3.6.0</Version>
+    <AssemblyVersion>3.6.0.0</AssemblyVersion>
+    <FileVersion>3.6.0.0</FileVersion>
+    <Product>Genshin Impact FPS Unlocker</Product>
+    <AssemblyTitle>Genshin Impact FPS Unlocker</AssemblyTitle>
+    <Company>Genshin FPS Unlocker contributors</Company>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -25,7 +31,8 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseMin|AnyCPU'">
-    <DebugType>full</DebugType>
+    <DebugType>none</DebugType>
+    <Optimize>true</Optimize>
   </PropertyGroup>
 
   <ItemGroup>

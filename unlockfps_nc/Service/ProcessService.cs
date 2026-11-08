@@ -76,6 +76,8 @@ namespace unlockfps_nc.Service
                     @"Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
+            Native.SetPriorityClass(pi.hProcess, PriorityToClass(_config.Priority));
+
             if (_config.SuspendLoad)
                 Native.ResumeThread(pi.hThread);
 
@@ -108,20 +110,47 @@ namespace unlockfps_nc.Service
             while (!_cts.IsCancellationRequested) {
 
                 await Task.Delay(1000, _cts.Token);
-                using var process = Process.GetProcesses()
-                    .FirstOrDefault(x => x is { ProcessName: "GenshinImpact" } or { ProcessName: "YuanShen" });
+
+                // note: Process.GetProcesses() returns every process; the previous
+                // FirstOrDefault() discarded them all without disposing, leaking a
+                // process handle per second for the whole session
+                Process? process = null;
+                foreach (var candidate in Process.GetProcesses()) {
+                    if (candidate.ProcessName is "GenshinImpact" or "YuanShen") {
+                        process = candidate;
+                        break;
+                    }
+
+                    candidate.Dispose();
+                }
+
                 if (process == null)
                     continue;
 
-                while (!ProcessUtils.IsWindowDrawing(process.MainWindowHandle) && !_cts.IsCancellationRequested)
-                    await Task.Delay(1000, _cts.Token);
+                using (process) {
+                    var waited = 0;
+                    while (!ProcessUtils.IsWindowDrawing(process.MainWindowHandle) && !_cts.IsCancellationRequested) {
+                        if (waited++ >= 120) // don't wait forever if the game never draws a window
+                            break;
 
-                if (!_ipcService.Start(process.Id))
-                    return;
+                        await Task.Delay(1000, _cts.Token);
+                    }
 
-                while (!process.HasExited && !_cts.IsCancellationRequested) {
-                    _ipcService.Update();
-                    await Task.Delay(62, _cts.Token);
+                    if (_cts.IsCancellationRequested)
+                        break;
+
+                    if (!_ipcService.Start(process.Id))
+                        return;
+
+                    try {
+                        while (!process.HasExited && !_cts.IsCancellationRequested) {
+                            _ipcService.Update();
+                            await Task.Delay(62, _cts.Token);
+                        }
+                    }
+                    catch (InvalidOperationException) {
+                        // process exited between the checks
+                    }
                 }
 
                 if (_gameHandle != IntPtr.Zero && _config.AutoClose) {
@@ -132,6 +161,16 @@ namespace unlockfps_nc.Service
                 await Task.Delay(5000, _cts.Token);
             }
         }
+
+        private static uint PriorityToClass(int priority) => priority switch
+        {
+            0 => 0x00000100, // REALTIME_PRIORITY_CLASS
+            1 => 0x00000080, // HIGH_PRIORITY_CLASS
+            2 => 0x00008000, // ABOVE_NORMAL_PRIORITY_CLASS
+            3 => 0x00000020, // NORMAL_PRIORITY_CLASS
+            4 => 0x00004000, // BELOW_NORMAL_PRIORITY_CLASS
+            _ => 0x00000040, // IDLE_PRIORITY_CLASS
+        };
 
         private string BuildCommandLine()
         {
