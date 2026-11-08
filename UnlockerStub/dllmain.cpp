@@ -105,6 +105,11 @@ bool IsPlausibleFramerate(void* address, int32_t& value)
  * Scanning for those setters is version independent, unlike the old thunk walk, which
  * required the "mov ecx, 60 ; call" target to still be a managed setter. From 7.x on
  * that call goes straight into native code, so the old walk resolves to nothing.
+ *
+ * 7.2.0 verifier: there are 22 raw matches of the old B9 3C 00 00 00 E8 pattern, none of
+ * which land on a thunk (the call now targets native code directly), so the legacy path
+ * has been dead on recent clients since the 7.x transition. We keep it only as a last
+ * resort fallback and log a warning when it is exercised.
  */
 bool DiscoverFramerateTargets(std::span<uint8_t> il2cppSection)
 {
@@ -129,7 +134,7 @@ bool DiscoverFramerateTargets(std::span<uint8_t> il2cppSection)
 		FramerateTargets.push_back(reinterpret_cast<int32_t*>(candidate));
 	}
 
-	return !FramerateTargets.empty();
+ return !FramerateTargets.empty();
 }
 
 bool SetupData()
