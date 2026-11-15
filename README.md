@@ -9,35 +9,37 @@ false-positive / kick problems described below.
 - OS and CN clients
 - Tested against `GenshinImpact.exe` **7.2.0** (451,130,280 bytes, 2026‑11‑04)
 
-## Why the old build stopped working
+## The stub resolver: unchanged upstream code
 
-Since 7.x the unlocker fails with `outdated pattern` (or silently leaves the game at 60 fps). The old
-resolver scanned for
+This fork's stub is the upstream `UnlockerStub/dllmain.cpp` **verbatim** (the only edit is
+`__declspec(align(8))` -> `alignas(8)` so it also builds with clang/zig). Nothing custom was added to the
+resolver, because upstream's resolver already handles 7.2.0.
 
-```
-B9 3C 00 00 00 E8      ; mov ecx, 60 ; call <managed setter>
-```
+An earlier revision of this fork replaced it with a "scan for `C7 05 ... 3C 00 00 00 C3` setters" method.
+That method matched statics that are *not* the live frame-limit field and returned success, so
+`SetupData()` never fell through to the working code and the game stayed at 60 fps. It has been removed.
 
-and then walked `jmp`/`call` thunks down to a body that began with `mov [rip+disp], ecx`, reading the
-static frame-limit address out of it. On 7.2.0 **all 22** matches of that byte pattern exist, but the
-call now goes straight into native code in `.text`, so the `*dest == 0xE9` filter matches nothing and the
-walk never resolves — hence "outdated pattern".
+### What upstream does, verified on 7.2.0
 
-### The fix
-
-The game still keeps the limit in static ints and still resets them with a tiny managed setter, compiled to
+Upstream scans the `il2cpp` section for
 
 ```
-C7 05 disp32 3C 00 00 00 C3   ; mov dword ptr [rip+disp], 60 ; ret
+B9 3C 00 00 00 E8      ; mov ecx, 60 ; call rel32
 ```
 
-The unlocker now finds those setters directly, validates that the target is a committed, writable page
-holding a plausible frame rate, and writes the requested value to **every** one of them (7.2 has two
-duplicate settings classes). This shape is version independent, and the old thunk walk is kept as a
-fallback for older builds.
+and keeps the first hit whose call target begins with `E9`. On `GenshinImpact.exe` 7.2.0
+(451,130,280 bytes, 2026-11-04) that is:
 
-Verified statically on 7.2.0: the two resolved statics are each read back into a settings object at
-`+0x80` (`mov eax, [static] ; mov [rsi+0x80], eax`) — i.e. they are the frame-limit fields.
+| Step | Address |
+| --- | --- |
+| `B9 3C 00 00 00 E8` hit | `0x6d6d52c` (also `0x6e1b573`) |
+| call target, `E9` thunk | `0x146c6c0` -> `0x16ba230` |
+| setter body | `89 0D 2E 65 EF 03 C3` = `mov [rip+0x03EF652E], ecx ; ret` |
+| resolved static | `0x55b0764` |
+
+`89 0D disp32` and `C7 05 disp32` encode the displacement the same way, so the same arithmetic
+(`rip + disp + 6`) recovers the static for both. Only 2 of the 22 raw pattern hits pass the `E9` filter,
+and both resolve to the same field, which is why upstream only needs the first one.
 
 ## Safety: the 120 fps cap
 
@@ -107,7 +109,7 @@ Requirements: .NET 8 SDK (or newer) and [zig](https://ziglang.org/) 0.17, or Vis
 ```sh
 mkdir -p .build
 zig cc -target x86_64-windows-gnu -O2 -c UnlockerStub/Zydis.c -o .build/zydis.o
-zig c++ -target x86_64-windows-gnu -shared -O2 -std=c++20 -o UnlockerStub/UnlockerStub.dll \
+zig c++ -target x86_64-windows-gnu -shared -O2 -std=c++23 -o UnlockerStub/UnlockerStub.dll \
     UnlockerStub/dllmain.cpp UnlockerStub/Utils.cpp .build/zydis.o -ldbghelp -lntdll
 cp UnlockerStub/UnlockerStub.dll unlockfps_nc/Resources/UnlockerStub.dll
 

@@ -9,7 +9,7 @@ release : unlockfps_nc/bin/ReleaseMin/net8.0-windows/win-x64/publish/unlockfps_n
 UnlockerStub/UnlockerStub.dll : $(wildcard UnlockerStub/*.cpp UnlockerStub/*.c UnlockerStub/*.h)
 	mkdir -p $(BUILD_DIR)
 	$(ZIG) cc -target x86_64-windows-gnu -O2 -c UnlockerStub/Zydis.c -o $(BUILD_DIR)/zydis.o
-	$(ZIG) c++ -target x86_64-windows-gnu -shared -O2 -std=c++20 \
+	$(ZIG) c++ -target x86_64-windows-gnu -shared -O2 -std=c++23 \
 		-o $@ UnlockerStub/dllmain.cpp UnlockerStub/Utils.cpp $(BUILD_DIR)/zydis.o -ldbghelp -lntdll
 
 unlockfps_nc/Resources/%.dll : UnlockerStub/%.dll

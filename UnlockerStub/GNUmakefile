@@ -6,10 +6,10 @@ DLL = UnlockerStub.dll
 all: $(DLL)
 
 $(DLL): $(OBJS)
-	$(CC) -v -shared -o $@ $^ -Wl,--out-implib,lib$(basename $@).a -lntdll
+	$(CC) -std=c++23 -v -shared -o $@ $^ -Wl,--out-implib,lib$(basename $@).a -lntdll
 
 %.o: %.cpp
-	$(CC) -c $< -o $@
+	$(CC) -std=c++23 -c $< -o $@
 
 clean:
 	rm -f $(OBJS) $(DLL)
