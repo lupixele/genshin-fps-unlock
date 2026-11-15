@@ -59,8 +59,6 @@
             ToolTipSettings = new ToolTip(components);
             DllAddDialog = new OpenFileDialog();
             CBHdr = new CheckBox();
-            ComboGfxApi = new ComboBox();
-            LabelGfxApi = new Label();
             TabCtrlSettings.SuspendLayout();
             TabGeneral.SuspendLayout();
             TabLaunchOptions.SuspendLayout();
@@ -94,8 +92,6 @@
             // TabGeneral
             // 
             TabGeneral.Controls.Add(CBHdr);
-            TabGeneral.Controls.Add(ComboGfxApi);
-            TabGeneral.Controls.Add(LabelGfxApi);
             TabGeneral.Controls.Add(ComboPriority);
             TabGeneral.Controls.Add(LabelPriority);
             TabGeneral.Controls.Add(CBPowerSave);
@@ -389,25 +385,6 @@
             CBHdr.Text = "Enable HDR";
             CBHdr.UseVisualStyleBackColor = true;
             // 
-            // ComboGfxApi
-            // 
-            ComboGfxApi.FormattingEnabled = true;
-            ComboGfxApi.Items.AddRange(new object[] { "Default (Direct3D 11)", "Direct3D 12 (experimental)", "Vulkan (experimental)", "OpenGL Core (experimental)" });
-            ComboGfxApi.Location = new Point(125, 125);
-            ComboGfxApi.Name = "ComboGfxApi";
-            ComboGfxApi.Size = new Size(121, 23);
-            ComboGfxApi.TabIndex = 8;
-            ToolTipSettings.SetToolTip(ComboGfxApi, "Adds -force-d3d12 / -force-vulkan / -force-glcore to the game command line. The Windows client normally runs Direct3D 11 and usually ignores these.");
-            // 
-            // LabelGfxApi
-            // 
-            LabelGfxApi.AutoSize = true;
-            LabelGfxApi.Location = new Point(3, 128);
-            LabelGfxApi.Name = "LabelGfxApi";
-            LabelGfxApi.Size = new Size(116, 15);
-            LabelGfxApi.TabIndex = 9;
-            LabelGfxApi.Text = "Graphics API (experimental)";
-            // 
             // SettingsForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -469,7 +446,5 @@
         private CheckBox CBUseMobileUI;
         private OpenFileDialog DllAddDialog;
         private CheckBox CBHdr;
-        private ComboBox ComboGfxApi;
-        private Label LabelGfxApi;
     }
 }

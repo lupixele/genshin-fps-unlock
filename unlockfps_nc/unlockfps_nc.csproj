@@ -14,9 +14,9 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
     <Configurations>Debug;Release;ReleaseMin</Configurations>
-    <Version>3.7.1</Version>
-    <AssemblyVersion>3.7.1.0</AssemblyVersion>
-    <FileVersion>3.7.1.0</FileVersion>
+    <Version>3.7.2</Version>
+    <AssemblyVersion>3.7.2.0</AssemblyVersion>
+    <FileVersion>3.7.2.0</FileVersion>
     <Product>Genshin Impact FPS Unlocker</Product>
     <AssemblyTitle>Genshin Impact FPS Unlocker</AssemblyTitle>
     <Company>Genshin FPS Unlocker contributors</Company>

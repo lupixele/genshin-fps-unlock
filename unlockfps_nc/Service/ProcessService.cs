@@ -187,14 +187,6 @@ namespace unlockfps_nc.Service
 
             commandLine += $"-monitor {_config.MonitorNum} ";
 
-            commandLine += _config.GraphicsApi switch
-            {
-                1 => "-force-d3d12 ",
-                2 => "-force-vulkan ",
-                3 => "-force-glcore ",
-                _ => ""
-            };
-
             commandLine += $"{_config.AdditionalCommandLine} ";
             return commandLine;
         }

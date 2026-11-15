@@ -28,9 +28,6 @@ namespace unlockfps_nc.Model
         public int MonitorNum { get; set; } = 1;
         public int Priority { get; set; } = 3;
 
-        // 0 = let the game pick (Direct3D 11), 1 = -force-d3d12, 2 = -force-vulkan,
-        // 3 = -force-glcore. Experimental: the client is built around D3D11 and may ignore these.
-        public int GraphicsApi { get; set; }
         public string AdditionalCommandLine { get; set; } = "";
 
         public long LastVersionNotify { get; set; } = 0;
