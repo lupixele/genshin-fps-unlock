@@ -120,13 +120,9 @@ namespace unlockfps_nc.Service
 
         public void Update()
         {
-            var framerate = configService.Config.FPSTarget;
-            if (configService.Config.CapFpsTo120)
-                framerate = Math.Min(framerate, 120);
-
             var ipcData = new IpcData
             {
-                Framerate = framerate,
+                Framerate = configService.Config.FPSTarget,
                 PowerSave = configService.Config.UsePowerSave,
                 UseMobileUI = configService.Config.UseMobileUI,
             };

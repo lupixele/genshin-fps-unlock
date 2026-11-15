@@ -1,4 +1,4 @@
-# Genshin Impact FPS Unlocker — 7.2 update
+﻿# Genshin Impact FPS Unlocker — 7.2 update
 
 Fork of [34736384/genshin-fps-unlock](https://github.com/34736384/genshin-fps-unlock) (via `lupixele`),
 updated so the frame-rate unlock works again on current Genshin Impact builds and hardened against the
@@ -40,18 +40,6 @@ and keeps the first hit whose call target begins with `E9`. On `GenshinImpact.ex
 `89 0D disp32` and `C7 05 disp32` encode the displacement the same way, so the same arithmetic
 (`rip + disp + 6`) recovers the static for both. Only 2 of the 22 raw pattern hits pass the `E9` filter,
 and both resolve to the same field, which is why upstream only needs the first one.
-
-## Safety: the 120 fps cap
-
-Since December 2025 the server kicks sessions whose target frame rate goes above **120**
-(`10310-4001`, typically in Stygian Onslaught / Miliastra). Reported values that get kicked: 144, 165, 275;
-120 is safe in every report.
-
-Settings → General → **Cap FPS at 120 (recommended)**, on by default. It clamps whatever you type in the
-main window to 120 before it reaches the game. Unchecking it restores the raw value (your risk).
-
-This tool cannot change whether HoYoverse tolerates it — it only stops the tool from tripping the check it
-can control.
 
 ## Antivirus / Smart App Control
 
@@ -127,7 +115,7 @@ The output is a single `unlockfps_nc.exe` (~4.2 MB) that needs the .NET Desktop 
 1. Run `unlockfps_nc.exe` as administrator (it self-elevates; the game needs it anyway).
 2. First run: point it at `GenshinImpact.exe` (or use *Set Path*; it also finds HoYoPlay installs).
 3. Press **Start Game** — the unlocker launches the game and keeps the limit set while it runs.
-4. Leave it running in the tray. `Cap FPS at 120` stays on unless you deliberately turn it off.
+4. Leave it running in the tray.
 
 Do not put the exe inside the game folder.
 

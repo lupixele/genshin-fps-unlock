@@ -32,7 +32,6 @@
             LabelAutoSave = new Label();
             TabCtrlSettings = new TabControl();
             TabGeneral = new TabPage();
-            CBMaxFps = new CheckBox();
             ComboPriority = new ComboBox();
             LabelPriority = new Label();
             CBPowerSave = new CheckBox();
@@ -93,7 +92,6 @@
             // TabGeneral
             // 
             TabGeneral.Controls.Add(CBHdr);
-            TabGeneral.Controls.Add(CBMaxFps);
             TabGeneral.Controls.Add(ComboPriority);
             TabGeneral.Controls.Add(LabelPriority);
             TabGeneral.Controls.Add(CBPowerSave);
@@ -387,17 +385,6 @@
             CBHdr.Text = "Enable HDR";
             CBHdr.UseVisualStyleBackColor = true;
             // 
-            // CBMaxFps
-            // 
-            CBMaxFps.AutoSize = true;
-            CBMaxFps.Location = new Point(6, 128);
-            CBMaxFps.Name = "CBMaxFps";
-            CBMaxFps.Size = new Size(185, 19);
-            CBMaxFps.TabIndex = 7;
-            CBMaxFps.Text = "Cap FPS at 120 (recommended)";
-            ToolTipSettings.SetToolTip(CBMaxFps, "The game kicks players whose target framerate is above 120\r\n(error 10310-4001). Uncheck only if you accept that risk.");
-            CBMaxFps.UseVisualStyleBackColor = true;
-            // 
             // SettingsForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -459,6 +446,5 @@
         private CheckBox CBUseMobileUI;
         private OpenFileDialog DllAddDialog;
         private CheckBox CBHdr;
-        private CheckBox CBMaxFps;
     }
 }

@@ -1,4 +1,4 @@
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
@@ -12,7 +12,7 @@ namespace unlockfps_nc
         private static readonly string MutexName = "286B345F-A2EB-4FF3-83E9-2DD83B87694A";
         private static readonly string EventName = "B2ABB8F2-E6B2-4E31-8A11-15F969ADF755";
         public static IServiceProvider ServiceProvider { get; private set; }
-        public static int Version => 3600;
+        public static int Version => 3700;
 
         [STAThread]
         static void Main()
