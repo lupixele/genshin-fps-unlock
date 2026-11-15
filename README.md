@@ -110,6 +110,23 @@ dotnet publish unlockfps_nc/unlockfps_nc.csproj -c ReleaseMin -r win-x64 -f net8
 
 The output is a single `unlockfps_nc.exe` (~4.2 MB) that needs the .NET Desktop Runtime 8.0.
 
+## Graphics API (experimental)
+
+Genshin's Windows client runs **Direct3D 11**; the API is chosen by the engine and is not user-selectable.
+Settings → General → **Graphics API (experimental)** appends one of
+
+| Option | Switch |
+| --- | --- |
+| Default (Direct3D 11) | nothing |
+| Direct3D 12 (experimental) | `-force-d3d12` |
+| Vulkan (experimental) | `-force-vulkan` |
+| OpenGL Core (experimental) | `-force-glcore` |
+
+to the game command line. Unity normally honours these only when the backend is compiled in and selectable;
+this client exposes no plain selectors (only `-force-d3d12-debug`, `-force-d3d11-nothreads`,
+`-force-vulkan-layers`), so most likely the switch is ignored and the game still starts on Direct3D 11.
+If it is honoured, expect shader-compile stutter and broken ReShade hooks, and treat it as unsupported.
+
 ## Usage
 
 1. Run `unlockfps_nc.exe` as administrator (it self-elevates; the game needs it anyway).
